@@ -1,0 +1,1412 @@
+{
+  "name": "complaint1",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Compalint Form",
+        "formDescription": "Reach us through this with whatever complaint you might have",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Customer Name",
+              "placeholder": "e.g John Doe"
+            },
+            {
+              "fieldLabel": "Complaint",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email"
+            }
+          ]
+        },
+        "options": {
+          "respondWithOptions": {
+            "values": {}
+          },
+          "useWorkflowTimezone": "={{ true }}"
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -1744,
+        -752
+      ],
+      "id": "e1bd3cba-a6d2-4490-87b3-5b2511171899",
+      "name": "On form submission",
+      "webhookId": "c281c415-15c9-493e-9162-acf18ac52d80"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=read and understand and classify {{ $json.Complaint }} into one of these categories\nwhich are:\n  Billing\n  Sales\n  Technical\n  Others\ninclude {{ $json['Customer Name'] }} in your output\n\nRules:\nif there is only one issue, return one and set mixed_complaints to false\n\nif theres more than one issues, return every issue seperately and set mixed_complaints to true\n\ndo not invent issue that are not present in the complaint\n\nuse only billing, sales, technical or others(complaint sent to HR) include whats in the bracket for others\n\nif the complaint is too unclear to classify reliably, set needs_review to true\n\ncreate form id as{{ 'CMP-' + $execution.id }}\n\n\n",
+        "hasOutputParser": true,
+        "needsFallback": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -1520,
+        -752
+      ],
+      "id": "cb46a030-5df4-4718-8eb0-2981e0992de8",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -1584,
+        -544
+      ],
+      "id": "c58ff8ad-76b5-4743-b7fe-2bf841bb8400",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Vws0VBljKkvvDSeA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"customer Name\":\"\",\n  \"complaint\": \"string\",\n  \"issues\": [\n    {\n      \"issue_text\": \"string\",\n      \"category\": \"\"\n    }\n  ],\n  \"Email\":\"\",\n  \"Form id\":\"\",\n  \"mixed_complaints\": false,\n  \"needs_review\": false\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -1360,
+        -544
+      ],
+      "id": "48e3fd03-b53f-4c73-b657-a6b92a30da91",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0",
+          "mode": "list",
+          "cachedResultName": "Customer's Complaints",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Complaints",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Customer Name": "={{ $('Basic LLM Chain').item.json.output['customer Name'] }}",
+            "Complaints": "={{ $('Basic LLM Chain').item.json.output.complaint }}",
+            "Type of issue": "={{ \n  $('Basic LLM Chain').item.json.output.issues\n    .map(i => i.category)\n    .filter(c => c && c.trim() !== '')\n    .join(' | ') \n}}",
+            "Customer's Email": "={{ $('On form submission').item.json.Email }}",
+            "Form ID": "={{ $('Basic LLM Chain').item.json.output['Form id'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Complaints",
+              "displayName": "Complaints",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Type of issue",
+              "displayName": "Type of issue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Customer's Email",
+              "displayName": "Customer's Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Form ID",
+              "displayName": "Form ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -992,
+        -752
+      ],
+      "id": "b8c381a8-28ae-460e-af03-6b5488c55199",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MOL5dknnTjZxIS2d",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "d357671f-187e-4dbc-97ac-0f47bfa22d76",
+              "leftValue": "={{ $json['needs review'] }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -704,
+        -576
+      ],
+      "id": "bda5ffac-9937-4b13-a20b-8b16d0405802",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "Annajessa41@gmail.com",
+        "subject": "=Complaint {{ $('Basic LLM Chain').item.json.output['Form id'] }} needs a review !",
+        "message": "=<p>The complaint here below:</p>\n\n<p>\nCustomer's name:{{ $('On form submission').item.json['Customer Name'] }}  <br>\nComplaint{{ $('On form submission').item.json.Complaint }}: <br>\nCustomer's Email: {{ $('On form submission').item.json.Email }}<br>\nForm ID: {{ $('Basic LLM Chain').item.json.output['Form id'] }}\n</p>\n\nPlease attend to it swiftly.",
+        "options": {
+          "replyTo": "={{ $json['Customer\\'s Email'] }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -480,
+        -688
+      ],
+      "id": "a90185b7-c6c9-47d6-b886-77e72cb709de",
+      "name": "Send a message",
+      "webhookId": "a0631b66-5352-47b0-addd-ba58ea393e73",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YnbFyLMgUPisHbdc",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -1568,
+        -448
+      ],
+      "id": "8d557328-5e5a-499f-a1df-2f58eab77eff",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "EXsvUcP1EF6WTxQ4",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "f18b76d1-e616-49b0-ba82-75a0431ff0da",
+              "leftValue": "={{ $json['mixed complaints'] }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -416,
+        -416
+      ],
+      "id": "86b9b44e-ac2c-4a12-a861-78c53c143fbb",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json.Email }}",
+        "subject": "=Complaint received!",
+        "message": "=Hello {{ $json.output['customer Name'] }} we have received your complaint with complaint id: {{ $json.output['Form id'] }}. Please keep your complaint id safe for reference purpose.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -1216,
+        -752
+      ],
+      "id": "e9387906-d59e-4498-b61a-4f2a7e90cf5a",
+      "name": "Send a message1",
+      "webhookId": "77636677-77e3-40f7-a729-218513d492bb",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YnbFyLMgUPisHbdc",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "issues",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1.1,
+      "position": [
+        -288,
+        -640
+      ],
+      "id": "8781db11-546b-492c-8de4-b5337b41b133",
+      "name": "Split mixed Complaint"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        736,
+        -800
+      ],
+      "id": "d676a22d-eb78-41b9-9c45-18253893b1a7",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.category ?? $('If').item.json.issues[0].category }}",
+                    "rightValue": "Billing",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "44bfa17c-8f8d-4d77-8fb3-c5399d01248a"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "3c834eff-6cc1-49ca-a9c4-e32c6153af67",
+                    "leftValue": "={{ $json.category ?? $('If').item.json.issues[0].category }}",
+                    "rightValue": "Sales",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "6945f05c-0c84-4136-8b7a-6db7e8592a8f",
+                    "leftValue": "={{ $json.category ?? $('If').item.json.issues[0].category }}",
+                    "rightValue": "Technical",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.5,
+      "position": [
+        144,
+        -336
+      ],
+      "id": "fd03723f-3bba-4040-9927-31ac7c6a749c",
+      "name": "send complaint to departments"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "076d16d5-2554-4133-8a81-0bb762ccccea",
+              "name": "Customer Name",
+              "value": "={{ $('Basic LLM Chain').item.json.output['customer Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "020b0ae0-f28f-4748-82ad-a2fcd7f28d6e",
+              "name": "Complaint",
+              "value": "={{ $('Basic LLM Chain').item.json.output.complaint }}",
+              "type": "string"
+            },
+            {
+              "id": "2fa91047-9dca-4f80-ab25-199270e089f7",
+              "name": "issues",
+              "value": "={{ $('Basic LLM Chain').item.json.output.issues }}",
+              "type": "array"
+            },
+            {
+              "id": "a3bfe382-975a-428d-ab15-9f3bd14b01fa",
+              "name": "Email",
+              "value": "={{ $('Basic LLM Chain').item.json.output.Email }}",
+              "type": "string"
+            },
+            {
+              "id": "0941f470-a3d8-4cac-aa2e-f9063d5254fc",
+              "name": "Form id",
+              "value": "={{ $('Basic LLM Chain').item.json.output['Form id'] }}",
+              "type": "string"
+            },
+            {
+              "id": "fd233349-e2ab-44fd-85c7-bd5368958f69",
+              "name": "mixed complaints",
+              "value": "={{ $('Basic LLM Chain').item.json.output.mixed_complaints }}",
+              "type": "boolean"
+            },
+            {
+              "id": "cef99e97-5f62-4a8b-9c08-695d43b218b3",
+              "name": "needs review",
+              "value": "={{ $('Basic LLM Chain').item.json.output.needs_review }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -784,
+        -784
+      ],
+      "id": "f995ccd3-394c-498f-bffd-d14b8c723d8d",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9d5b75e3-eaac-45aa-a07d-2a9be5d256e3",
+              "name": "Issue.id",
+              "value": "={{ $('Edit Fields').item.json['Form id'] }}-i{{ $itemIndex + 1 }}",
+              "type": "string"
+            },
+            {
+              "id": "08d4fdbd-b2ec-43b5-80d0-3b55a294ecd4",
+              "name": "Complaint id",
+              "value": "={{ $json.issue_text }}",
+              "type": "string"
+            },
+            {
+              "id": "06b02143-0307-49d3-a6b5-f98743ab506f",
+              "name": "Status",
+              "value": "Received",
+              "type": "string"
+            },
+            {
+              "id": "dcd3b1b0-20cf-4ee9-a6ac-ad91c7fffe80",
+              "name": "Name",
+              "value": "={{ $('On form submission').item.json['Customer Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "d6ed26e9-67be-4a97-adcc-ba2815d831ff",
+              "name": "Email",
+              "value": "={{ $('On form submission').item.json.Email }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -96,
+        -640
+      ],
+      "id": "c59797b3-c683-436b-b13d-a206e7c77a6b",
+      "name": "prepare issues for tracking1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0",
+          "mode": "list",
+          "cachedResultName": "Customer's Complaints",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1359119413,
+          "mode": "list",
+          "cachedResultName": "Issues_Table",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0/edit#gid=1359119413"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.Name }}",
+            "Email": "={{ $json.Email }}",
+            "Status": "={{ $json.Status }}",
+            "Customer id": "={{ $json['Complaint id'] }}",
+            "Issues id": "={{ $json.Issue.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Issues id",
+              "displayName": "Issues id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer id",
+              "displayName": "Customer id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        112,
+        -768
+      ],
+      "id": "1699e2f6-fe23-406d-b1d9-e753172ccc36",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MOL5dknnTjZxIS2d",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3f343f90-4c8c-42bc-aa41-8ad2dc99ab81",
+              "name": "issue_text",
+              "value": "={{ $('Split mixed Complaint').item.json.issue_text }}",
+              "type": "string"
+            },
+            {
+              "id": "0ec15390-fc2d-446a-8072-dacac81dde6b",
+              "name": "category",
+              "value": "={{ $('Split mixed Complaint').item.json.category }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        128,
+        -576
+      ],
+      "id": "353e76a3-d08f-41c5-b3c0-26ec8d250bc1",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "sendTo": "Annajessa41@gmail.com",
+        "subject": "=hey! a billing complaint is on your way from {{ $('On form submission').item.json['Customer Name'] }} ",
+        "message": "=\n\n<p>\nComplaint: {{ $json.issue_text }} {{ $json.issues[0].issue_text }} <br>\n\nCategory: {{ $json.category ?? $('If').item.json.issues[0].category }} <br>\n\nCustomer's Email: {{ $('On form submission').item.json.Email }}\n</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        -832
+      ],
+      "id": "7526b2ed-ff15-4196-bc30-6e60a6bc104f",
+      "name": "Billing Department",
+      "webhookId": "c448d8ef-8205-443b-be52-aa87c1de7afa",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YnbFyLMgUPisHbdc",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "Annajessa41@gmail.com",
+        "subject": "=We received your complaint!",
+        "message": "={{ $('Basic LLM Chain1').item.json.output.email_body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        -624
+      ],
+      "id": "b74ab69e-e1dc-4618-b50c-4a96f2b29bad",
+      "name": "Billing Department1",
+      "webhookId": "c448d8ef-8205-443b-be52-aa87c1de7afa",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YnbFyLMgUPisHbdc",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "angelentary@gmail.com",
+        "subject": "=hey! you got a technical complaint from {{ $('On form submission').item.json['Customer Name'] }} ",
+        "message": "=\n\n<p>\nComplaint: {{ $json.issue_text }} {{ $json.issues[0].issue_text }} <br>\n\nCategory: {{ $json.category ?? $('If').item.json.issues[0].category }} <br>\n\nCustomer's Email: {{ $('On form submission').item.json.Email }}\n</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -64,
+        -768
+      ],
+      "id": "8f9788b3-2785-439b-9229-7f9e2975809e",
+      "name": "Technical Department",
+      "webhookId": "f4dca661-f835-4047-aed3-e7c686550411",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YnbFyLMgUPisHbdc",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Billing Complaint Assistant. Your job is to carefully analyse the customer complaint provided below and draft a professional response email body that addresses the customer's billing issue.\n\nYour response should:\n\n    Acknowledge the customer's concern and apologise for any inconvenience caused.\n\n    Analyse the specific billing issue raised (e.g., duplicate charge, incorrect amount, refund request) and confirm your understanding of it.\n\n    Explain the resolution or next steps clearly and politely.\n\n    Close with a courteous sign-off and an invitation to reply if further assistance is needed.\n\nWrite the email in a clear, empathetic, and professional tone. Do not include subject lines, internal notes, or placeholder brackets unless necessary. Output only the email body, formatted as plain text, ready to be sent for review by a supervisor before dispatch.\nNote:dont provide solution to the complaint just review and let the customer know it will be sorted \n      You can ask the customers for some details that might help in getting the complaint sorted as soon as possible\n\nCustomer Complaint:\n{{ $json.issue_text }}\n\nCustomer Name: {{ $('Edit Fields').item.json['Customer Name'] }}:  **Customer Email:**{{ $('On form submission').item.json.Email }}\nForm ID: {{ $('Basic LLM Chain').item.json.output['Form id'] }}\n",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        288,
+        -464
+      ],
+      "id": "cee71778-390f-4333-a702-1d01de611e71",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        304,
+        -240
+      ],
+      "id": "52d7ccac-1566-459d-969c-4cf3169f6000",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Vws0VBljKkvvDSeA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"customer_name\": \"string\",\n  \"customer_email\": \"string\",\n  \"email_body\": \"string\",\n  \"form_id\":\"string\",\n  \"complaint\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        432,
+        -256
+      ],
+      "id": "2a9aec18-89dc-4856-b8f7-9b57def013a0",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "annajessa41@gmail.com",
+        "subject": "=Update on Complaint id:{{ $json.output.form_id }}",
+        "message": "={{ $json.output.email_body }}",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        656,
+        -464
+      ],
+      "id": "ae507bd3-f1b8-4a7b-8a3b-5edf1fd35dc2",
+      "name": "Send message and wait for response",
+      "webhookId": "54ed9917-c7c8-4c2b-8866-cbe2dda4792b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YnbFyLMgUPisHbdc",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        640,
+        -624
+      ],
+      "id": "f347c9f6-602c-402a-83df-8252658ccb8f",
+      "name": "Wait",
+      "webhookId": "ac8a2d46-37e0-4536-879b-e7c4215bcaee"
+    },
+    {
+      "parameters": {
+        "formTitle": "Complaint Resolution Form",
+        "formDescription": "Keeping track of all complaints",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Complaint ID"
+            },
+            {
+              "fieldLabel": "Issues ID"
+            },
+            {
+              "fieldLabel": "Comment",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {
+          "respondWithOptions": {
+            "values": {}
+          },
+          "useWorkflowTimezone": "={{ true }}"
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -1184,
+        -112
+      ],
+      "id": "cb2c9f3f-40cf-44ed-8f58-16ccc5a0e3ab",
+      "name": "On form submission1",
+      "webhookId": "9d28cc96-bfcd-4aef-bb89-d14fec77dc32"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "5951b18c-cb78-4ad7-9548-6a5f30a12a33",
+              "leftValue": "={{ $json['Issues ID'] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -960,
+        -112
+      ],
+      "id": "9088d05d-9585-4723-bb84-cf0d237ee179",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0",
+          "mode": "list",
+          "cachedResultName": "Customer's Complaints",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1359119413,
+          "mode": "list",
+          "cachedResultName": "Issues_Table",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0/edit#gid=1359119413"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "={{ $json.Comment }}",
+            "Issues id": "={{ $json['Issues ID'] }}"
+          },
+          "matchingColumns": [
+            "Issues id"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Issues id",
+              "displayName": "Issues id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Customer id",
+              "displayName": "Customer id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -736,
+        -16
+      ],
+      "id": "1f4af0e0-1a85-4128-b7a7-09528b290a28",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MOL5dknnTjZxIS2d",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0",
+          "mode": "list",
+          "cachedResultName": "Customer's Complaints",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Complaints",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Complaint ID": "={{ $json['Complaint ID'] }}",
+            "Status": "={{ $json.Comment }}"
+          },
+          "matchingColumns": [
+            "Complaint ID"
+          ],
+          "schema": [
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Complaints",
+              "displayName": "Complaints",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Type of issue",
+              "displayName": "Type of issue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer's Email",
+              "displayName": "Customer's Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Complaint ID",
+              "displayName": "Complaint ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -736,
+        -208
+      ],
+      "id": "4c27975a-58a6-4e76-8a5e-3bb85a935576",
+      "name": "Update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MOL5dknnTjZxIS2d",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Split mixed Complaint",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "send complaint to departments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split mixed Complaint": {
+      "main": [
+        [
+          {
+            "node": "prepare issues for tracking1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prepare issues for tracking1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "send complaint to departments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send complaint to departments": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        []
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Send message and wait for response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message and wait for response": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Billing Department1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission1": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "2dbf4729-071a-4855-bda5-8686c72d61a7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1ab5589f24a60ea350f37f933b8e819037e403e2b86c114976e7054daa5655db"
+  },
+  "nodeGroups": [],
+  "id": "8WlOJY2LliWM3m22",
+  "tags": []
+}

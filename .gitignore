@@ -1,0 +1,16 @@
+# Dependency files
+node_modules/
+.env
+*.env.local
+
+# n8n execution data
+.n8n/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
