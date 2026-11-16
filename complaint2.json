@@ -1,0 +1,1579 @@
+{
+  "name": "Complaint2",
+  "nodes": [
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -2304,
+        -608
+      ],
+      "id": "c58ff8ad-76b5-4743-b7fe-2bf841bb8400",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Vws0VBljKkvvDSeA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"customer Name\":\"\",\n  \"complaint\": \"string\",\n  \"issues\": [\n    {\n      \"issue_text\": \"string\",\n      \"category\": \"\"\n    }\n  ],\n  \"Email\":\"\",\n  \"Form id\":\"\",\n  \"mixed_complaints\": false,\n  \"needs_review\": false\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -2080,
+        -608
+      ],
+      "id": "48e3fd03-b53f-4c73-b657-a6b92a30da91",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -2288,
+        -512
+      ],
+      "id": "8d557328-5e5a-499f-a1df-2f58eab77eff",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "EXsvUcP1EF6WTxQ4",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "issues",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1.1,
+      "position": [
+        -1008,
+        -704
+      ],
+      "id": "8781db11-546b-492c-8de4-b5337b41b133",
+      "name": "Split mixed Complaint"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.category ?? $('Needs Human Review?').item.json.issues[0].category }}",
+                    "rightValue": "Billing",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "44bfa17c-8f8d-4d77-8fb3-c5399d01248a"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "3c834eff-6cc1-49ca-a9c4-e32c6153af67",
+                    "leftValue": "={{ $json.category ?? $('Needs Human Review?').item.json.issues[0].category }}",
+                    "rightValue": "Sales",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "6945f05c-0c84-4136-8b7a-6db7e8592a8f",
+                    "leftValue": "={{ $json.category ?? $('Needs Human Review?').item.json.issues[0].category }}",
+                    "rightValue": "Technical",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.5,
+      "position": [
+        -832,
+        -144
+      ],
+      "id": "fd03723f-3bba-4040-9927-31ac7c6a749c",
+      "name": "send complaint to departments"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9d5b75e3-eaac-45aa-a07d-2a9be5d256e3",
+              "name": "Issue.id",
+              "value": "={{ $('Data Set-Out').item.json['Form id'] }}-i{{ $itemIndex + 1 }}",
+              "type": "string"
+            },
+            {
+              "id": "08d4fdbd-b2ec-43b5-80d0-3b55a294ecd4",
+              "name": "Complaint id",
+              "value": "={{ $json.issue_text }}",
+              "type": "string"
+            },
+            {
+              "id": "06b02143-0307-49d3-a6b5-f98743ab506f",
+              "name": "Status",
+              "value": "Received",
+              "type": "string"
+            },
+            {
+              "id": "dcd3b1b0-20cf-4ee9-a6ac-ad91c7fffe80",
+              "name": "Name",
+              "value": "={{ $('Customer\\'s Form Complaint').item.json['Customer Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "d6ed26e9-67be-4a97-adcc-ba2815d831ff",
+              "name": "Email",
+              "value": "={{ $('Customer\\'s Form Complaint').item.json.Email }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -816,
+        -704
+      ],
+      "id": "c59797b3-c683-436b-b13d-a206e7c77a6b",
+      "name": "prepare issues for tracking1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0",
+          "mode": "list",
+          "cachedResultName": "Customer's Complaints",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1359119413,
+          "mode": "list",
+          "cachedResultName": "Issues_Table",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0/edit#gid=1359119413"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.Name }}",
+            "Email": "={{ $json.Email }}",
+            "Status": "={{ $json.Status }}",
+            "Customer id": "={{ $json['Complaint id'] }}",
+            "Issues id": "={{ $json.Issue.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Issues id",
+              "displayName": "Issues id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer id",
+              "displayName": "Customer id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -608,
+        -912
+      ],
+      "id": "1699e2f6-fe23-406d-b1d9-e753172ccc36",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MOL5dknnTjZxIS2d",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "Annajessa41@gmail.com",
+        "subject": "=We received your complaint!",
+        "message": "={{ $('Notify Billing Dept. For Approval').item.json.output.email_body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        288,
+        -704
+      ],
+      "id": "b74ab69e-e1dc-4618-b50c-4a96f2b29bad",
+      "name": "Billing Department1",
+      "webhookId": "c448d8ef-8205-443b-be52-aa87c1de7afa",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YnbFyLMgUPisHbdc",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "angelentary@gmail.com",
+        "subject": "=hey! you got a technical complaint from {{ $('Customer\\'s Form Complaint').item.json['Customer Name'] }} ",
+        "message": "={{ $json.output.email_body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -224,
+        80
+      ],
+      "id": "8f9788b3-2785-439b-9229-7f9e2975809e",
+      "name": "Technical Department",
+      "webhookId": "f4dca661-f835-4047-aed3-e7c686550411",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YnbFyLMgUPisHbdc",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -512,
+        -416
+      ],
+      "id": "52d7ccac-1566-459d-969c-4cf3169f6000",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Vws0VBljKkvvDSeA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"customer_name\": \"string\",\n  \"customer_email\": \"string\",\n  \"email_body\": \"string\",\n  \"form_id\":\"string\",\n  \"complaint\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -400,
+        -416
+      ],
+      "id": "2a9aec18-89dc-4856-b8f7-9b57def013a0",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        96,
+        -704
+      ],
+      "id": "f347c9f6-602c-402a-83df-8252658ccb8f",
+      "name": "Wait",
+      "webhookId": "ac8a2d46-37e0-4536-879b-e7c4215bcaee"
+    },
+    {
+      "parameters": {
+        "formTitle": "Complaint Resolution Form",
+        "formDescription": "Keeping track of all complaints",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Complaint ID"
+            },
+            {
+              "fieldLabel": "Issues ID"
+            },
+            {
+              "fieldLabel": "Comment",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {
+          "respondWithOptions": {
+            "values": {}
+          },
+          "useWorkflowTimezone": "={{ true }}"
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -2560,
+        -64
+      ],
+      "id": "cb2c9f3f-40cf-44ed-8f58-16ccc5a0e3ab",
+      "name": "On form submission1",
+      "webhookId": "9d28cc96-bfcd-4aef-bb89-d14fec77dc32"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "5951b18c-cb78-4ad7-9548-6a5f30a12a33",
+              "leftValue": "={{ $json['Issues ID'] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -2336,
+        -64
+      ],
+      "id": "9088d05d-9585-4723-bb84-cf0d237ee179",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0",
+          "mode": "list",
+          "cachedResultName": "Customer's Complaints",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1359119413,
+          "mode": "list",
+          "cachedResultName": "Issues_Table",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0/edit#gid=1359119413"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "={{ $json.Comment }}",
+            "Issues id": "={{ $json['Issues ID'] }}"
+          },
+          "matchingColumns": [
+            "Issues id"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Issues id",
+              "displayName": "Issues id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Customer id",
+              "displayName": "Customer id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2112,
+        32
+      ],
+      "id": "1f4af0e0-1a85-4128-b7a7-09528b290a28",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MOL5dknnTjZxIS2d",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0",
+          "mode": "list",
+          "cachedResultName": "Customer's Complaints",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Complaints",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Complaint ID": "={{ $json['Complaint ID'] }}",
+            "Status": "={{ $json.Comment }}"
+          },
+          "matchingColumns": [
+            "Complaint ID"
+          ],
+          "schema": [
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Complaints",
+              "displayName": "Complaints",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Type of issue",
+              "displayName": "Type of issue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer's Email",
+              "displayName": "Customer's Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Complaint ID",
+              "displayName": "Complaint ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2112,
+        -160
+      ],
+      "id": "4c27975a-58a6-4e76-8a5e-3bb85a935576",
+      "name": "Update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MOL5dknnTjZxIS2d",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Complaint Form",
+        "formDescription": "Reach us through this with whatever complaint you might have",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Customer Name",
+              "placeholder": "e.g John Doe"
+            },
+            {
+              "fieldLabel": "Complaint",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email"
+            }
+          ]
+        },
+        "options": {
+          "respondWithOptions": {
+            "values": {}
+          },
+          "useWorkflowTimezone": "={{ true }}"
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -2464,
+        -816
+      ],
+      "id": "e1bd3cba-a6d2-4490-87b3-5b2511171899",
+      "name": "Customer's Form Complaint",
+      "webhookId": "c281c415-15c9-493e-9162-acf18ac52d80"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=read and understand and classify {{ $json.Complaint }} into one of these categories\nwhich are:\n  Billing\n  Sales\n  Technical\n  Others\ninclude {{ $json['Customer Name'] }} in your output\n\nRules:\nif there is only one issue, return one and set mixed_complaints to false\n\nif theres more than one issues, return every issue seperately and set mixed_complaints to true\n\ndo not invent issue that are not present in the complaint\n\nuse only billing, sales, technical or others(complaint sent to HR) include whats in the bracket for others\n\nif the complaint is too unclear to classify reliably, set needs_review to true\n\ncreate form id as{{ 'CMP-' + $execution.id }}\n\n\n",
+        "hasOutputParser": true,
+        "needsFallback": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -2240,
+        -816
+      ],
+      "id": "cb46a030-5df4-4718-8eb0-2981e0992de8",
+      "name": "Classifying  Complaints"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Customer\\'s Form Complaint').item.json.Email }}",
+        "subject": "=Complaint received!",
+        "message": "=Hello {{ $json.output['customer Name'] }} we have received your complaint with complaint id: {{ $json.output['Form id'] }}. Please keep your complaint id safe for reference purpose.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -1936,
+        -816
+      ],
+      "id": "e9387906-d59e-4498-b61a-4f2a7e90cf5a",
+      "name": "Customer's Complaint's Receipt",
+      "webhookId": "77636677-77e3-40f7-a729-218513d492bb",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YnbFyLMgUPisHbdc",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0",
+          "mode": "list",
+          "cachedResultName": "Customer's Complaints",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Complaints",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DzJ2kI6Stqomkir5EDxf9yndPwig_E5xz1NJGFIfbk0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Customer Name": "={{ $('Classifying  Complaints').item.json.output['customer Name'] }}",
+            "Complaints": "={{ $('Classifying  Complaints').item.json.output.complaint }}",
+            "Type of issue": "={{ \n  $('Classifying  Complaints').item.json.output.issues\n    .map(i => i.category)\n    .filter(c => c && c.trim() !== '')\n    .join(' | ') \n}}",
+            "Customer's Email": "={{ $('Customer\\'s Form Complaint').item.json.Email }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Complaints",
+              "displayName": "Complaints",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Type of issue",
+              "displayName": "Type of issue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Customer's Email",
+              "displayName": "Customer's Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Complaint ID",
+              "displayName": "Complaint ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1712,
+        -816
+      ],
+      "id": "b8c381a8-28ae-460e-af03-6b5488c55199",
+      "name": "Company's Com. Receipt",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MOL5dknnTjZxIS2d",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "076d16d5-2554-4133-8a81-0bb762ccccea",
+              "name": "Customer Name",
+              "value": "={{ $('Classifying  Complaints').item.json.output['customer Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "020b0ae0-f28f-4748-82ad-a2fcd7f28d6e",
+              "name": "Complaint",
+              "value": "={{ $('Classifying  Complaints').item.json.output.complaint }}",
+              "type": "string"
+            },
+            {
+              "id": "2fa91047-9dca-4f80-ab25-199270e089f7",
+              "name": "issues",
+              "value": "={{ $('Classifying  Complaints').item.json.output.issues }}",
+              "type": "array"
+            },
+            {
+              "id": "a3bfe382-975a-428d-ab15-9f3bd14b01fa",
+              "name": "Email",
+              "value": "={{ $('Classifying  Complaints').item.json.output.Email }}",
+              "type": "string"
+            },
+            {
+              "id": "0941f470-a3d8-4cac-aa2e-f9063d5254fc",
+              "name": "Form id",
+              "value": "={{ $('Classifying  Complaints').item.json.output['Form id'] }}",
+              "type": "string"
+            },
+            {
+              "id": "fd233349-e2ab-44fd-85c7-bd5368958f69",
+              "name": "mixed complaints",
+              "value": "={{ $('Classifying  Complaints').item.json.output.mixed_complaints }}",
+              "type": "boolean"
+            },
+            {
+              "id": "cef99e97-5f62-4a8b-9c08-695d43b218b3",
+              "name": "needs review",
+              "value": "={{ $('Classifying  Complaints').item.json.output.needs_review }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -1504,
+        -848
+      ],
+      "id": "f995ccd3-394c-498f-bffd-d14b8c723d8d",
+      "name": "Data Set-Out"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "d357671f-187e-4dbc-97ac-0f47bfa22d76",
+              "leftValue": "={{ $json['needs review'] }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -1424,
+        -640
+      ],
+      "id": "bda5ffac-9937-4b13-a20b-8b16d0405802",
+      "name": "Needs Human Review?"
+    },
+    {
+      "parameters": {
+        "sendTo": "Annajessa41@gmail.com",
+        "subject": "=Complaint {{ $('Classifying  Complaints').item.json.output['Form id'] }} needs a review !",
+        "message": "=<p>The complaint here below:</p>\n\n<p>\nCustomer's name:{{ $('Customer\\'s Form Complaint').item.json['Customer Name'] }}  <br>\nComplaint{{ $('Customer\\'s Form Complaint').item.json.Complaint }}: <br>\nCustomer's Email: {{ $('Customer\\'s Form Complaint').item.json.Email }}<br>\nForm ID: {{ $('Classifying  Complaints').item.json.output['Form id'] }}\n</p>\n\nPlease attend to it swiftly.",
+        "options": {
+          "replyTo": "={{ $json['Customer\\'s Email'] }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -1216,
+        -848
+      ],
+      "id": "a90185b7-c6c9-47d6-b886-77e72cb709de",
+      "name": "Mail to Support for approval",
+      "webhookId": "a0631b66-5352-47b0-addd-ba58ea393e73",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YnbFyLMgUPisHbdc",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "f18b76d1-e616-49b0-ba82-75a0431ff0da",
+              "leftValue": "={{ $json['mixed complaints'] }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -1136,
+        -480
+      ],
+      "id": "86b9b44e-ac2c-4a12-a861-78c53c143fbb",
+      "name": "Mixed Complaint?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3f343f90-4c8c-42bc-aa41-8ad2dc99ab81",
+              "name": "issue_text",
+              "value": "={{ $('Split mixed Complaint').item.json.issue_text }}",
+              "type": "string"
+            },
+            {
+              "id": "0ec15390-fc2d-446a-8072-dacac81dde6b",
+              "name": "category",
+              "value": "={{ $('Split mixed Complaint').item.json.category }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -448,
+        -752
+      ],
+      "id": "353e76a3-d08f-41c5-b3c0-26ec8d250bc1",
+      "name": "Set Out Data"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Billing Complaint Assistant. Your job is to carefully analyse the customer complaint provided below and draft a professional response email body that addresses the customer's billing issue.\n\nYour response should:\n\n    Acknowledge the customer's concern and apologise for any inconvenience caused.\n\n    Analyse the specific billing issue raised (e.g., duplicate charge, incorrect amount, refund request) and confirm your understanding of it.\n\n    Explain the resolution or next steps clearly and politely.\n\n    Close with a courteous sign-off and an invitation to reply if further assistance is needed.\n\nWrite the email in a clear, empathetic, and professional tone. Do not include subject lines, internal notes, or placeholder brackets unless necessary. Output only the email body, formatted as plain text, ready to be sent for review by a supervisor before dispatch.\nNote:dont provide solution to the complaint just review and let the customer know it will be sorted \n      You can ask the customers for some details that might help in getting the complaint sorted as soon as possible\n\nCustomer Complaint:\n{{ $json.issue_text }}\n\nCustomer Name: {{ $('Data Set-Out').item.json['Customer Name'] }}:  **Customer Email:**{{ $('Customer\\'s Form Complaint').item.json.Email }}\nForm ID: {{ $('Classifying  Complaints').item.json.output['Form id'] }}\n",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -512,
+        -528
+      ],
+      "id": "cee71778-390f-4333-a702-1d01de611e71",
+      "name": "Notify Billing Dept. For Approval"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "annajessa41@gmail.com",
+        "subject": "=Update on Complaint id:{{ $json.output.form_id }}",
+        "message": "={{ $json.output.email_body }}",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -144,
+        -672
+      ],
+      "id": "ae507bd3-f1b8-4a7b-8a3b-5edf1fd35dc2",
+      "name": "Send To Billing Dept. For Approval",
+      "webhookId": "54ed9917-c7c8-4c2b-8866-cbe2dda4792b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YnbFyLMgUPisHbdc",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"customer_name\": \"string\",\n  \"customer_email\": \"string\",\n  \"email_body\": \"string\",\n  \"form_id\":\"string\",\n  \"complaint\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -400,
+        144
+      ],
+      "id": "02ac224a-eb00-4331-ae2e-252266b7aa46",
+      "name": "Structured Output Parser2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -544,
+        176
+      ],
+      "id": "47311425-1643-4e80-840d-b35185ade8af",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Vws0VBljKkvvDSeA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"customer_name\": \"string\",\n  \"customer_email\": \"string\",\n  \"email_body\": \"string\",\n  \"form_id\":\"string\",\n  \"complaint\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -352,
+        -96
+      ],
+      "id": "9ba07f73-fb0e-4469-814a-3fc5a3f082a6",
+      "name": "Structured Output Parser3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -528,
+        -96
+      ],
+      "id": "92ebbc2a-62f7-4ea2-845f-30ca10e406c1",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Vws0VBljKkvvDSeA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Sales Complaint Assistant. Your job is to carefully read and review the customer complaint provided below and draft a professional response email body that acknowledges the customer's sales issue.\n\nImportant: Do not provide any solution, fix, workaround, or troubleshooting steps for the complaint. Your role is only to review the complaint and let the customer know it will be sorted. Do not promise a specific resolution or timeline.\n\nYour response should:\n\n    Acknowledge the customer's concern and apologise for any inconvenience caused.\n\n    Confirm that you have reviewed the complaint and that it will be sorted as soon as possible.\n\n    Ask the customer for any additional details that would help get the complaint sorted faster — for example:\n\n        The order number or receipt/invoice number.\n\n        The product name, quantity, or pack size involved (e.g., 50 packs of Cig).\n\n        The date the order was placed and the expected delivery date, if known.\n\n        The delivery address on file, to confirm it is correct.\n\n        Any tracking number or delivery confirmation they have received.\n\n    Close with a courteous sign-off and an invitation to reply with the requested details.\n\nWrite the email in a clear, empathetic, and professional tone. Do not include subject lines, internal notes, or placeholder brackets unless necessary. Do not include solutions or fixes. Output only the email body, formatted as plain text, ready to be sent for review by a supervisor before dispatch.\n\nCustomer Complaint:\n{{ $json.issue_text }}\n\nCustomer Name: {{ $('Data Set-Out').item.json['Customer Name'] }}:  **Customer Email:**{{ $('Customer\\'s Form Complaint').item.json.Email }}\nForm ID: {{ $('Classifying  Complaints').item.json.output['Form id'] }}\n",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -560,
+        64
+      ],
+      "id": "9ffadaab-7cbe-4c23-b6d6-c74e22520364",
+      "name": "Prepare a message for Technical Issue"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=    You are a Technical Complaint Assistant. Your job is to carefully read and review the customer complaint provided below and draft a professional response email body that acknowledges the customer's technical issue.\n\n    Important: Do not provide any solution, fix, workaround, or troubleshooting steps for the complaint. Your role is only to review the complaint and let the customer know it will be sorted. Do not promise a specific resolution or timeline.\n\n    Your response should:\n\n        Acknowledge the customer's concern and apologise for any inconvenience caused.\n\n        Confirm that you have reviewed the complaint and that it will be sorted as soon as possible.\n\n        Ask the customer for any additional details that would help get the complaint sorted faster — for example:\n\n            The device, browser, or app version they are using.\n\n            The exact error message or a screenshot, if available.\n\n            The date and time the issue occurred.\n\n            Any steps they took before the issue appeared.\n\n        Close with a courteous sign-off and an invitation to reply with the requested details.\n\n    Write the email in a clear, empathetic, and professional tone. Do not include subject lines, internal notes, or placeholder brackets unless necessary. Do not include solutions or technical fixes. Output only the email body, formatted as plain text, ready to be sent for review by a supervisor before dispatch.\n\nCustomer Complaint:\n{{ $json.issue_text }}\n\nCustomer Name: {{ $('Data Set-Out').item.json['Customer Name'] }}:  **Customer Email:**{{ $('Customer\\'s Form Complaint').item.json.Email }}\nForm ID: {{ $('Classifying  Complaints').item.json.output['Form id'] }}\n",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -528,
+        -256
+      ],
+      "id": "96ec0e53-44e1-4496-b891-d3114e97093a",
+      "name": "Prepare a message for Sales Issue"
+    },
+    {
+      "parameters": {
+        "sendTo": "Annajessa41@gmail.com",
+        "subject": "=Hey! a Sales complaint is on your way from {{ $('Customer\\'s Form Complaint').item.json['Customer Name'] }} ",
+        "message": "={{ $json.output.email_body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -160,
+        -352
+      ],
+      "id": "7526b2ed-ff15-4196-bc30-6e60a6bc104f",
+      "name": "Sales Department",
+      "webhookId": "c448d8ef-8205-443b-be52-aa87c1de7afa",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YnbFyLMgUPisHbdc",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Classifying  Complaints",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Classifying  Complaints",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Classifying  Complaints",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Split mixed Complaint": {
+      "main": [
+        [
+          {
+            "node": "prepare issues for tracking1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prepare issues for tracking1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Set Out Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send complaint to departments": {
+      "main": [
+        [
+          {
+            "node": "Notify Billing Dept. For Approval",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare a message for Sales Issue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare a message for Technical Issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Notify Billing Dept. For Approval",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Notify Billing Dept. For Approval",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Billing Department1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission1": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer's Form Complaint": {
+      "main": [
+        [
+          {
+            "node": "Classifying  Complaints",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classifying  Complaints": {
+      "main": [
+        [
+          {
+            "node": "Customer's Complaint's Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer's Complaint's Receipt": {
+      "main": [
+        [
+          {
+            "node": "Company's Com. Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Company's Com. Receipt": {
+      "main": [
+        [
+          {
+            "node": "Data Set-Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Set-Out": {
+      "main": [
+        [
+          {
+            "node": "Needs Human Review?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Human Review?": {
+      "main": [
+        [
+          {
+            "node": "Mail to Support for approval",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mixed Complaint?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mixed Complaint?": {
+      "main": [
+        [
+          {
+            "node": "Split mixed Complaint",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "send complaint to departments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Out Data": {
+      "main": [
+        [
+          {
+            "node": "send complaint to departments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Billing Dept. For Approval": {
+      "main": [
+        [
+          {
+            "node": "Send To Billing Dept. For Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send To Billing Dept. For Approval": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Prepare a message for Technical Issue",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Prepare a message for Technical Issue",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser3": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Prepare a message for Sales Issue",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Prepare a message for Sales Issue",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare a message for Sales Issue": {
+      "main": [
+        [
+          {
+            "node": "Sales Department",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare a message for Technical Issue": {
+      "main": [
+        [
+          {
+            "node": "Technical Department",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "951d6afa-1183-4bd9-90a3-c8ea0dda4b4d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1ab5589f24a60ea350f37f933b8e819037e403e2b86c114976e7054daa5655db"
+  },
+  "nodeGroups": [],
+  "id": "8WlOJY2LliWM3m22",
+  "tags": []
+}
